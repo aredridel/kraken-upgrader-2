@@ -1,0 +1,6 @@
+{
+  "name": "testapp",
+  "dependencies": {
+    "kraken-js": "^1.0.1"
+  }
+}

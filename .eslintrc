@@ -1,0 +1,11 @@
+{
+    "env": {
+        "node": true
+    },
+    "rules": {
+        "no-underscore-dangle": false,
+        "no-use-before-define": false,
+        "no-shadow": false,
+        "dot-notation": false
+    }
+}

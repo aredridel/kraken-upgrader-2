@@ -1,0 +1,24 @@
+{
+    "ignore": {
+    },
+
+    "middleware": {
+
+        "on": {
+            "enabled": true
+        },
+
+        "off": {
+            "enabled": false
+        },
+
+        "unspec": {
+            // "enabled": false
+        },
+
+        "byRef": "config:byRef"
+    },
+
+    "byRef": {
+    }
+}
