@@ -36,27 +36,12 @@ module.exports = function checkUpgrade(dir, cb) {
 
         getConfig(options).then(function (config) {
             var middleware = toNamed(config.get('middleware'));
-            return middleware.filter(function (e) {
-                return !('enabled' in e.value);
-            }).map(function (e) {
-                return util.format("Middleware '%s' was not enabled before, but was not explicitly disabled. Add `\"enabled\": false` to its configuration to keep existing behavior.", e.name);
-            }).concat(middleware.filter(function (e) {
-                return e.value === "kraken-js/middleware/404" ||
-                    (e.value.module && e.value.module.name === 'kraken-js/middleware/404') ||
-                    e.value === "kraken-js/middleware/500" ||
-                    (e.value.module && e.value.module.name === 'kraken-js/middleware/500');
-            }).map(function (e) {
-                return util.format("Middleware '%s' is deprecated. You should probably just remove it and let the defaults in Express work.", e.name);
-            }));
+            return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware));
         }).then(function (messages) {
-            return getAllConfigsSeparately(dir).then(function (configs) {
-                return messages.concat(configs.filter(hasImports).map(function (config) {
-                    return util.format("config '%s' has import: handlers. These are now resolved as each configuratio is merged, instead of at the end. Make sure this won't break your application", config.file);
-                }));
+            return warningsAboutImportsThatChangedBehavior(dir).then(function (warnings) {
+                return messages.concat(warnings);
             });
-        }).then(function (messages) {
-            cb(null, messages);
-        }).catch(cb);
+        }).then(success(cb)).catch(cb);
     });
 };
 
@@ -81,26 +66,58 @@ function fetchConfig(file) {
     });
 }
 
-function hasImports(config) {
-    return reallyHasImports(config.content);
+function configHasImports(config) {
+    return objHasImports(config.content);
+}
 
-    function reallyHasImports(obj) {
-        if (typeof obj === 'object') {
-            for (var k in obj) {
-                if (reallyHasImports(obj[k])) {
-                    return true;
-                }
+function objHasImports(obj) {
+    if (typeof obj === 'object') {
+        for (var k in obj) {
+            if (objHasImports(obj[k])) {
+                return true;
             }
-        } else if (Array.isArray(obj[k])) {
-            for (var i = 0; i < obj[k].length; i++) {
-                if (reallyHasImports(obj[k])) {
-                    return true;
-                }
-            }
-        } else if (typeof obj === 'string') {
-            return /^import:/.test(obj);
         }
-
-        return false;
+    } else if (Array.isArray(obj[k])) {
+        for (var i = 0; i < obj[k].length; i++) {
+            if (objHasImports(obj[k])) {
+                return true;
+            }
+        }
+    } else if (typeof obj === 'string') {
+        return /^import:/.test(obj);
     }
+
+    return false;
+}
+function listDeprecatedMiddleware(middleware) {
+    return middleware.filter(function (e) {
+        return e.value === "kraken-js/middleware/404" ||
+            (e.value.module && e.value.module.name === 'kraken-js/middleware/404') ||
+            e.value === "kraken-js/middleware/500" ||
+            (e.value.module && e.value.module.name === 'kraken-js/middleware/500');
+    }).map(function (e) {
+        return util.format("Middleware '%s' is deprecated. You should probably just remove it and let the defaults in Express work.", e.name);
+    });
+}
+
+function warningsAboutUnspecifiedEnables(middleware) {
+    return middleware.filter(function (e) {
+        return !('enabled' in e.value);
+    }).map(function (e) {
+        return util.format("Middleware '%s' was not enabled before, but was not explicitly disabled. Add `\"enabled\": false` to its configuration to keep existing behavior.", e.name);
+    });
+}
+
+function warningsAboutImportsThatChangedBehavior(dir) {
+    return getAllConfigsSeparately(dir).then(function (configs) {
+        return configs.filter(configHasImports).map(function (config) {
+            return util.format("config '%s' has import: handlers. These are now resolved as each configuratio is merged, instead of at the end. Make sure this won't break your application", config.file);
+        });
+    });
+}
+
+function success(cb) {
+    return function (success) {
+        return cb(null, success);
+    };
 }
