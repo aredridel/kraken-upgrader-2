@@ -1,5 +1,5 @@
-npm-upgrader-2
-==============
+kraken-upgrader-2
+=================
 
 Embodies the knowledge of how to upgrade kraken 1.0 apps to kraken 2.0.
 
