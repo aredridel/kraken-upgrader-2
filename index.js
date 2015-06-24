@@ -2,10 +2,14 @@
 
 var getConfig = require('kraken-js/lib/config').create;
 var util = require('util');
-var fs = require('fs');
 var path = require('path');
 var VError = require('verror');
 var semver = require('semver');
+var bluebird = require('bluebird');
+var Promise = bluebird.Promise;
+var fs = bluebird.promisifyAll(require('fs'));
+var glob = bluebird.promisify(require('glob'));
+var strip = require('strip-json-comments');
 
 module.exports = function checkUpgrade(dir, cb) {
     var options = {
@@ -45,6 +49,12 @@ module.exports = function checkUpgrade(dir, cb) {
                 return util.format("Middleware '%s' is deprecated. You should probably just remove it and let the defaults in Express work.", e.name);
             }));
         }).then(function (messages) {
+            return getAllConfigsSeparately(dir).then(function (configs) {
+                return messages.concat(configs.filter(hasImports).map(function (config) {
+                    return util.format("config '%s' has import: handlers. These are now resolved as each configuratio is merged, instead of at the end. Make sure this won't break your application", config.file);
+                }));
+            });
+        }).then(function (messages) {
             cb(null, messages);
         }).catch(cb);
     });
@@ -57,4 +67,40 @@ function toNamed(obj) {
     }
 
     return out;
+}
+
+function getAllConfigsSeparately(dir) {
+    return glob(path.join(dir, 'config/*.json')).then(function (results) {
+        return Promise.all(results.map(fetchConfig));
+    });
+}
+
+function fetchConfig(file) {
+    return fs.readFileAsync(file, 'utf-8').then(function (file) {
+        return {file: file, content: JSON.parse(strip(file))};
+    });
+}
+
+function hasImports(config) {
+    return reallyHasImports(config.content);
+
+    function reallyHasImports(obj) {
+        if (typeof obj === 'object') {
+            for (var k in obj) {
+                if (reallyHasImports(obj[k])) {
+                    return true;
+                }
+            }
+        } else if (Array.isArray(obj[k])) {
+            for (var i = 0; i < obj[k].length; i++) {
+                if (reallyHasImports(obj[k])) {
+                    return true;
+                }
+            }
+        } else if (typeof obj === 'string') {
+            return /^import:/.test(obj);
+        }
+
+        return false;
+    }
 }
