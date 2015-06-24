@@ -4,7 +4,7 @@
   "description": "A tool to upgrade Kraken framework",
   "main": "index.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "tap test.js"
   },
   "repository": {
     "type": "git",

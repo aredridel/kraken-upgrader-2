@@ -32,11 +32,20 @@ module.exports = function checkUpgrade(dir, cb) {
 
         getConfig(options).then(function (config) {
             var middleware = toNamed(config.get('middleware'));
-            cb(null, middleware.filter(function (e) {
+            return middleware.filter(function (e) {
                 return !('enabled' in e.value);
             }).map(function (e) {
                 return util.format("Middleware '%s' was not enabled before, but was not explicitly disabled. Add `\"enabled\": false` to its configuration to keep existing behavior.", e.name);
+            }).concat(middleware.filter(function (e) {
+                return e.value === "kraken-js/middleware/404" ||
+                    (e.value.module && e.value.module.name === 'kraken-js/middleware/404') ||
+                    e.value === "kraken-js/middleware/500" ||
+                    (e.value.module && e.value.module.name === 'kraken-js/middleware/500');
+            }).map(function (e) {
+                return util.format("Middleware '%s' is deprecated. You should probably just remove it and let the defaults in Express work.", e.name);
             }));
+        }).then(function (messages) {
+            cb(null, messages);
         }).catch(cb);
     });
 };

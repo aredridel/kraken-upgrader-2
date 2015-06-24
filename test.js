@@ -9,6 +9,9 @@ test('should tell us about incompatibilities', function (t) {
         t.error(err);
         t.matches(result[0], /unspec/);
         t.matches(result[1], /byRef/);
+        t.matches(result[2], /fileNotFound/);
+        t.matches(result[3], /serverError/);
+        t.equal(result.length, 4);
         t.end();
     });
 });
