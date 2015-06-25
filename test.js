@@ -11,7 +11,8 @@ test('should tell us about incompatibilities', function (t) {
         t.matches(result[1], /byRef/);
         t.matches(result[2], /fileNotFound/);
         t.matches(result[3], /serverError/);
-        t.equal(result.length, 4);
+        t.matches(result[4], /animport/);
+        t.equal(result.length, 5);
         t.end();
     });
 });

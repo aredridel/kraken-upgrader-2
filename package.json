@@ -20,9 +20,12 @@
   },
   "homepage": "https://github.com/krakenjs/kraken-upgrader-2#readme",
   "dependencies": {
+    "bluebird": "^2.9.30",
     "express": "^4.13.0",
+    "glob": "^5.0.10",
     "kraken-js": "^2.0.0-rc.1",
     "semver": "^4.3.6",
+    "strip-json-comments": "^1.0.2",
     "verror": "^1.6.0"
   },
   "devDependencies": {
