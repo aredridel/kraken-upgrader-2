@@ -20,29 +20,21 @@ module.exports = function checkUpgrade(dir, cb) {
         inheritViews: false
     };
 
-    fs.readFile(path.resolve(options.basedir, 'package.json'), 'utf-8', function (err, pkg) {
-        if (err) {
-            return cb(err);
+    fs.readFileAsync(path.resolve(options.basedir, 'package.json'), 'utf-8').then(function (pkg) {
+        var info = JSON.parse(pkg);
+        if (!semver.satisfies('1.0.5', info.dependencies['kraken-js'])) {
+            return cb(new VError("package '%s' does not depend on kraken-js 1.0 and cannot be upgraded", info.name));
         }
-
-        try {
-            var info = JSON.parse(pkg);
-            if (!semver.satisfies('1.0.5', info.dependencies['kraken-js'])) {
-                return cb(new VError("package '%s' does not depend on kraken-js 1.0 and cannot be upgraded", info.name));
-            }
-        } catch (e) {
-            return cb(e);
-        }
-
-        getConfig(options).then(function (config) {
+    }).then(function () {
+        return getConfig(options).then(function (config) {
             var middleware = toNamed(config.get('middleware'));
             return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware));
-        }).then(function (messages) {
-            return warningsAboutImportsThatChangedBehavior(dir).then(function (warnings) {
-                return messages.concat(warnings);
-            });
-        }).then(success(cb)).catch(cb);
-    });
+        });
+    }).then(function (messages) {
+        return warningsAboutImportsThatChangedBehavior(dir).then(function (warnings) {
+            return messages.concat(warnings);
+        });
+    }).then(success(cb)).catch(cb);
 };
 
 function toNamed(obj) {
