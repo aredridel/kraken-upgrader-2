@@ -21,7 +21,8 @@ test('should tell us about incompatibilities', function (t) {
         t.matches(result[11], /test.*fileNotFound/);
         t.matches(result[12], /test.*serverError/);
         t.matches(result[13], /config\/config.json.*import:/);
-        t.equal(result.length, 14);
+        t.matches(result[14], /meddleware@4/);
+        t.equal(result.length, 15);
         t.end();
     });
 });

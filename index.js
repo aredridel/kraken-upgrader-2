@@ -20,10 +20,12 @@ module.exports = function checkUpgrade(dir, cb) {
     }).then(warnAboutConfigs(dir))
     .then(function (messages) {
         return warningsAboutImportsThatChangedBehavior(dir).then(function (warnings) {
-            return messages.concat(warnings);
+            return messages.concat(warnings).concat(meddlewareWarning);
         });
     }).then(success(cb)).catch(cb);
 };
+
+var meddlewareWarning = 'Be aware that middleware registered with `app.use` may be in a different order than with kraken 1.0. See the changes in meddleware@4.0.0 for more information.';
 
 function toNamed(obj) {
     var out = [];
