@@ -20,10 +20,12 @@ module.exports = function checkUpgrade(dir, cb) {
     }).then(warnAboutConfigs(dir))
     .then(function (messages) {
         return warningsAboutImportsThatChangedBehavior(dir).then(function (warnings) {
-            return messages.concat(warnings);
+            return messages.concat(warnings).concat(meddlewareWarning);
         });
     }).then(success(cb)).catch(cb);
 };
+
+var meddlewareWarning = 'Be aware that middleware registered with `app.use` may be in a different order than with kraken 1.0. See the changes in meddleware@4.0.0 for more information.';
 
 function toNamed(obj) {
     var out = [];
@@ -40,9 +42,9 @@ function getAllConfigsSeparately(dir) {
     });
 }
 
-function fetchConfig(file) {
-    return fs.readFileAsync(file, 'utf-8').then(function (file) {
-        return {file: file, content: JSON.parse(strip(file))};
+function fetchConfig(filename) {
+    return fs.readFileAsync(filename, 'utf-8').then(function (file) {
+        return {file: filename, content: JSON.parse(strip(file))};
     });
 }
 
@@ -90,7 +92,7 @@ function warningsAboutUnspecifiedEnables(middleware) {
 
 function warningsAboutImportsThatChangedBehavior(dir) {
     return getAllConfigsSeparately(dir).filter(configHasImports).map(function (config) {
-        return util.format("config '%s' has import: handlers. These are now resolved as each configuratio is merged, instead of at the end. Make sure this won't break your application", config.file);
+        return util.format("config '%s' has import: handlers. These are now resolved as each configuration is merged, instead of at the end. Make sure this won't break your application", path.relative(dir, config.file));
     });
 }
 
@@ -101,6 +103,22 @@ function success(cb) {
 }
 
 function warnAboutConfigs(dir) {
+
+    return function () {
+        return glob(path.join(dir, 'config/*.json')).map(function (conf) {
+            var base = path.basename(conf, '.json');
+            return base === 'config' ? 'production' : base;
+        }).filter(function (e) {
+            return e[0] !== '_';
+        }).reduce(function (warnings, env) {
+            return warningsForConfig(env, dir).then(function (m) {
+                return warnings.concat(m);
+            });
+        }, []);
+    };
+}
+
+function warningsForConfig(env, dir) {
     var options = {
         protocols: {},
         onconfig: function () {},
@@ -109,10 +127,15 @@ function warnAboutConfigs(dir) {
         inheritViews: false
     };
 
-    return function () {
-        return getConfig(options).then(function (config) {
-            var middleware = toNamed(config.get('middleware'));
-            return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware));
+    var oldEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = env;
+    return getConfig(options).then(function (conf) {
+        process.env.NODE_ENV = oldEnv;
+        return {env: env, conf: conf};
+    }).then(function (config) {
+        var middleware = toNamed(config.conf.get('middleware'));
+        return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware)).map(function (e) {
+            return util.format("In environment '%s', %s", config.env, e);
         });
-    };
+    });
 }
