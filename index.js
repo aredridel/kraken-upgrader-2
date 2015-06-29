@@ -1,6 +1,6 @@
 "use strict";
 
-var getConfig = require('kraken-js/lib/config').create;
+var loadEnvConfig = require('./load_env_config.js');
 var util = require('util');
 var path = require('path');
 var VError = require('verror');
@@ -26,15 +26,6 @@ module.exports = function checkUpgrade(dir, cb) {
 };
 
 var meddlewareWarning = 'Be aware that middleware registered with `app.use` may be in a different order than with kraken 1.0. See the changes in meddleware@4.0.0 for more information.';
-
-function toNamed(obj) {
-    var out = [];
-    for (var k in obj) {
-        out.push({name: k, value: obj[k]});
-    }
-
-    return out;
-}
 
 function getAllConfigsSeparately(dir) {
     return glob(path.join(dir, 'config/*.json')).then(function (results) {
@@ -71,6 +62,7 @@ function objHasImports(obj) {
 
     return false;
 }
+
 function listDeprecatedMiddleware(middleware) {
     return middleware.filter(function (e) {
         return e.value === "kraken-js/middleware/404" ||
@@ -127,13 +119,9 @@ function warningsForConfig(env, dir) {
         inheritViews: false
     };
 
-    var oldEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = env;
-    return getConfig(options).then(function (conf) {
-        process.env.NODE_ENV = oldEnv;
-        return {env: env, conf: conf};
-    }).then(function (config) {
-        var middleware = toNamed(config.conf.get('middleware'));
+    return loadEnvConfig(env, dir, options).then(function (obj) {
+        var middleware = obj.middleware;
+        var config = obj.config;
         return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware)).map(function (e) {
             return util.format("In environment '%s', %s", config.env, e);
         });
