@@ -71,6 +71,7 @@ function objHasImports(obj) {
 
     return false;
 }
+
 function listDeprecatedMiddleware(middleware) {
     return middleware.filter(function (e) {
         return e.value === "kraken-js/middleware/404" ||
