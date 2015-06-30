@@ -3,7 +3,14 @@
 var util = require('util');
 var getConfig = require('kraken-js/lib/config').create;
 
-module.exports = function loadEnvConfig(env, dir, options) {
+module.exports = function loadEnvConfig(env, dir) {
+    var options = {
+        protocols: {},
+        onconfig: function () {},
+        basedir: dir,
+        mountpath: null,
+        inheritViews: false
+    };
     var oldEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = env;
 

@@ -111,15 +111,8 @@ function warnAboutConfigs(dir) {
 }
 
 function warningsForConfig(env, dir) {
-    var options = {
-        protocols: {},
-        onconfig: function () {},
-        basedir: dir,
-        mountpath: null,
-        inheritViews: false
-    };
 
-    return loadEnvConfig(env, dir, options).then(function (obj) {
+    return loadEnvConfig(env, dir).then(function (obj) {
         var middleware = obj.middleware;
         var config = obj.config;
         return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware)).map(function (e) {
