@@ -14,6 +14,7 @@
     "kraken"
   ],
   "author": "Aria Stewart <ariastewart@paypal.com>",
+  "contributors": "Ashok <coderatlabs@gmail.com>",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/krakenjs/kraken-upgrader-2/issues"
@@ -23,6 +24,7 @@
     "bluebird": "^2.9.30",
     "express": "^4.13.0",
     "glob": "^5.0.10",
+    "kraken-config-enumerator": "^1.0.0",
     "kraken-js": "^2.0.0-rc.1",
     "semver": "^4.3.6",
     "strip-json-comments": "^1.0.2",
