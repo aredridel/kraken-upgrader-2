@@ -1,6 +1,6 @@
 "use strict";
 
-var loadEnvConfig = require('./load_env_config.js');
+var loadEnvConfig = require('kraken-config-enumerator');
 var util = require('util');
 var path = require('path');
 var VError = require('verror');
