@@ -112,11 +112,19 @@ function warnAboutConfigs(dir) {
 
 function warningsForConfig(env, dir) {
 
-    return loadEnvConfig(env, dir).then(function (obj) {
-        var middleware = obj.middleware;
-        var config = obj.config;
+    return loadEnvConfig(env, dir).then(function (config) {
+        var middleware = toNamed(config.conf.get('middleware'));
         return warningsAboutUnspecifiedEnables(middleware).concat(listDeprecatedMiddleware(middleware)).map(function (e) {
             return util.format("In environment '%s', %s", config.env, e);
         });
     });
+}
+
+function toNamed(obj) {
+    var out = [];
+    for (var k in obj) {
+        out.push({name: k, value: obj[k]});
+    }
+
+    return out;
 }
