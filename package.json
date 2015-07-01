@@ -24,7 +24,7 @@
     "bluebird": "^2.9.30",
     "express": "^4.13.0",
     "glob": "^5.0.10",
-    "kraken-config-enumerator": "^1.0.0",
+    "kraken-config-enumerator": "^2.0.1",
     "kraken-js": "^2.0.0-rc.1",
     "semver": "^4.3.6",
     "strip-json-comments": "^1.0.2",
