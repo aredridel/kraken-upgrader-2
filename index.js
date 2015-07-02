@@ -9,6 +9,7 @@ var bluebird = require('bluebird');
 var fs = bluebird.promisifyAll(require('fs'));
 var glob = bluebird.promisify(require('glob'));
 var strip = require('strip-json-comments');
+var toNamed = require('./lib/toNamed.js');
 
 module.exports = function checkUpgrade(dir, cb) {
 
@@ -118,13 +119,4 @@ function warningsForConfig(env, dir) {
             return util.format("In environment '%s', %s", config.env, e);
         });
     });
-}
-
-function toNamed(obj) {
-    var out = [];
-    for (var k in obj) {
-        out.push({name: k, value: obj[k]});
-    }
-
-    return out;
 }
